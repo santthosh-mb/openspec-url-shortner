@@ -11,3 +11,10 @@ generator client {
 datasource db {
   provider = "sqlite"
 }
+
+model Link {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  url       String
+  createdAt DateTime @default(now())
+}
