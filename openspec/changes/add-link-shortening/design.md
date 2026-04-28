@@ -52,6 +52,11 @@ We need to land the smallest credible vertical slice: a JSON endpoint that mints
 - **Choice**: Export a single `PrismaClient` from `lib/prisma.ts` using the standard `globalThis` cache pattern so HMR in dev doesn't spawn a connection per reload.
 - **Why**: Without this, `next dev` leaks DB connections every time a route file changes.
 
+### Prisma 7 driver adapter (added during implementation)
+- **Choice**: Use `@prisma/adapter-better-sqlite3` (with `better-sqlite3` as the underlying driver) and pass it to `new PrismaClient({ adapter })`.
+- **Why**: Prisma 7's new `prisma-client` generator (already configured in `prisma/schema.prisma` from the project scaffold) requires a driver adapter at runtime — the bundled query engines were retired. SQLite in Prisma 7 means BYO driver. The schema's `datasource db` still drives migrations via the CLI; the runtime client now goes through the adapter.
+- **Note**: This wasn't in the original design — discovered when `new PrismaClient()` failed type-check with "Expected 1 arguments, but got 0." It's a small, mechanical addition rather than a rethink.
+
 ## Risks / Trade-offs
 
 - **Random slug → no idempotency**: Shortening the same URL twice yields two different slugs. → Acceptable for v1; if we later want idempotency, add an optional `findFirst({ where: { url } })` lookup behind a flag without changing the API shape.
